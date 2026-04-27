@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TimesheetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalDecision {
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      Role     @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+
+  attendances   Attendance[]
+  timesheets    Timesheet[]
+  assignedTasks Task[]       @relation("AssignedTasks")
+  approvals     Approval[]   @relation("ManagerApprovals")
+
+  @@index([role])
+}
+
+model Attendance {
+  id        String    @id @default(cuid())
+  userId    String
+  checkIn   DateTime?
+  checkOut  DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  assignedTo  String
+  status      TaskStatus @default(TODO)
+  createdAt   DateTime @default(now())
+
+  assignee   User        @relation("AssignedTasks", fields: [assignedTo], references: [id], onDelete: Cascade)
+  timesheets Timesheet[]
+
+  @@index([assignedTo, status])
+}
+
+model Timesheet {
+  id          String   @id @default(cuid())
+  userId      String
+  taskId      String
+  description String
+  hours       Float
+  status      TimesheetStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  approvals Approval[]
+
+  @@index([userId, status])
+  @@index([taskId])
+}
+
+model Approval {
+  id          String   @id @default(cuid())
+  timesheetId String
+  managerId   String
+  feedback    String   @default("")
+  decision    ApprovalDecision
+  createdAt   DateTime @default(now())
+
+  timesheet Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
+  manager   User      @relation("ManagerApprovals", fields: [managerId], references: [id], onDelete: Cascade)
+
+  @@index([timesheetId])
+  @@index([managerId, createdAt])
+}
