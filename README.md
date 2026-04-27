@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Multi-Agent Workforce Management Prototype
 
-## Getting Started
+A demo-level, production-structured workforce management system built with:
 
-First, run the development server:
+- Next.js App Router + TypeScript
+- Tailwind CSS + shadcn/ui
+- Prisma ORM + SQLite
+- Zustand (mock auth + role/user context)
+- Gemini API integration for AI-based employee evaluation
+- Server Actions for core mutations
+
+## Features
+
+- Attendance agent with duplicate check-in prevention and checkout workflow
+- Timesheet agent with validation and manager approval gates
+- Task agent for creation, assignment, and status updates
+- Evaluation agent that calls Gemini and parses strict JSON output safely
+- Role-based UI workspaces:
+  - Employee dashboard
+  - Manager dashboard
+  - Admin dashboard
+- Mock login and role switching persisted in local state
+
+## Project Structure
+
+Core files:
+
+- `src/lib/agents/*` - autonomous domain agents
+- `src/lib/data/workforce.ts` - consolidated server-side dashboard snapshot
+- `src/app/actions.ts` - server actions for attendance, task, timesheet, and AI flows
+- `src/components/custom/*` - role dashboards + shell
+- `prisma/schema.prisma` - database models and enums
+- `prisma/seed.js` - demo data setup
+
+## Setup
+
+1. Install dependencies
+
+```bash
+npm install
+```
+
+2. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+3. Set your Gemini key in `.env`
+
+```env
+GEMINI_API_KEY=your_key_here
+```
+
+4. Initialize database and seed data
+
+```bash
+npm run db:generate
+npm run db:push
+npm run db:seed
+```
+
+5. Start development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 and you will be redirected to `/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Useful Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` - start local dev server
+- `npm run build` - production build
+- `npm run typecheck` - TypeScript checks
+- `npm run db:generate` - generate Prisma client
+- `npm run db:push` - sync schema to SQLite
+- `npm run db:seed` - seed demo records
+- `npm run db:reset` - reset DB and reseed
 
-## Learn More
+## Demo Flow
 
-To learn more about Next.js, take a look at the following resources:
+1. Login via mock role selector.
+2. Employee:
+	- Check in / check out
+	- Add timesheet entry
+	- Update task status
+	- Run AI evaluation
+3. Manager:
+	- Review pending timesheets
+	- Approve/reject with feedback
+	- Assign new tasks
+4. Admin:
+	- Monitor users and role distribution
+	- View system-wide stats and latest approvals
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- If `GEMINI_API_KEY` is missing, invalid, or Gemini returns unreadable output, the evaluation agent shows a rules-based fallback appraisal so the demo remains usable.
+- The app uses SQLite for demo simplicity (`DATABASE_URL="file:./dev.db"`).
