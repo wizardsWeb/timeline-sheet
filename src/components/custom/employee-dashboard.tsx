@@ -7,7 +7,9 @@ import {
   checkInAction,
   checkOutAction,
   createTimesheetAction,
+  deleteTimesheetAction,
   generateEvaluationAction,
+  updateTimesheetAction,
   updateTaskStatusAction,
 } from "@/app/actions";
 import { StatusBadge } from "@/components/custom/status-badge";
@@ -96,6 +98,7 @@ export function EmployeeDashboard({ snapshot }: EmployeeDashboardProps) {
   });
   const [evaluationMap, setEvaluationMap] = useState<Record<string, EvaluationResult>>({});
   const [taskStatusDrafts, setTaskStatusDrafts] = useState<Record<string, TaskStatus>>({});
+  const [editingTimesheet, setEditingTimesheet] = useState<{ id: string; description: string; hours: string } | null>(null);
   const [isMutating, startMutation] = useTransition();
   const [isEvaluating, startEvaluation] = useTransition();
 
@@ -223,6 +226,41 @@ export function EmployeeDashboard({ snapshot }: EmployeeDashboardProps) {
         delete copy[taskId];
         return copy;
       });
+    });
+  };
+
+  const handleDeleteTimesheet = (timesheetId: string) => {
+    runAction(async () => {
+      const result = await deleteTimesheetAction(timesheetId);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success(result.message);
+    });
+  };
+
+  const handleEditTimesheet = () => {
+    if (!editingTimesheet) {
+      return;
+    }
+
+    const hours = Number(editingTimesheet.hours);
+
+    runAction(async () => {
+      const result = await updateTimesheetAction({
+        timesheetId: editingTimesheet.id,
+        description: editingTimesheet.description,
+        hours,
+      });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
+      setEditingTimesheet(null);
     });
   };
 
@@ -500,12 +538,13 @@ export function EmployeeDashboard({ snapshot }: EmployeeDashboardProps) {
                     <TableHead>Description</TableHead>
                     <TableHead>Hours</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {userTimesheets.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
                         No timesheets yet. Add your first work log.
                       </TableCell>
                     </TableRow>
@@ -519,11 +558,97 @@ export function EmployeeDashboard({ snapshot }: EmployeeDashboardProps) {
                         <TableCell>
                           <StatusBadge status={timesheet.status} />
                         </TableCell>
+                        <TableCell>
+                          {timesheet.status === "PENDING" && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={isMutating}
+                                onClick={() =>
+                                  setEditingTimesheet({
+                                    id: timesheet.id,
+                                    description: timesheet.description,
+                                    hours: String(timesheet.hours),
+                                  })
+                                }
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={isMutating}
+                                onClick={() => handleDeleteTimesheet(timesheet.id)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
                 </TableBody>
               </Table>
+
+              {/* Edit Timesheet Dialog */}
+              <Dialog
+                open={Boolean(editingTimesheet)}
+                onOpenChange={(open) => {
+                  if (!open) setEditingTimesheet(null);
+                }}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Timesheet Entry</DialogTitle>
+                    <DialogDescription>
+                      Update the description or hours for this pending work log.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label>Description</Label>
+                      <Textarea
+                        value={editingTimesheet?.description ?? ""}
+                        onChange={(event) =>
+                          setEditingTimesheet((prev) =>
+                            prev ? { ...prev, description: event.target.value } : prev
+                          )
+                        }
+                        placeholder="Describe work completed"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Hours</Label>
+                      <Input
+                        type="number"
+                        min={0.5}
+                        max={24}
+                        step={0.5}
+                        value={editingTimesheet?.hours ?? ""}
+                        onChange={(event) =>
+                          setEditingTimesheet((prev) =>
+                            prev ? { ...prev, hours: event.target.value } : prev
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingTimesheet(null)}
+                      disabled={isMutating}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleEditTimesheet} disabled={isMutating}>
+                      Save Changes
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             <TabsContent value="tasks" className="mt-4">

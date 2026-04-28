@@ -144,6 +144,43 @@ export async function reviewTimesheetAction(data: {
   }
 }
 
+export async function updateTimesheetAction(data: {
+  timesheetId: string;
+  description: string;
+  hours: number;
+}): Promise<ActionResult> {
+  if (!data.timesheetId) {
+    return fail("Timesheet is required");
+  }
+
+  try {
+    await timesheetAgent.updateTimesheet(data.timesheetId, {
+      description: data.description,
+      hours: data.hours,
+    });
+    revalidateWorkforceViews();
+    return { ok: true, message: "Timesheet updated successfully" };
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : "Could not update timesheet");
+  }
+}
+
+export async function deleteTimesheetAction(
+  timesheetId: string
+): Promise<ActionResult> {
+  if (!timesheetId) {
+    return fail("Timesheet is required");
+  }
+
+  try {
+    await timesheetAgent.deleteTimesheet(timesheetId);
+    revalidateWorkforceViews();
+    return { ok: true, message: "Timesheet deleted" };
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : "Could not delete timesheet");
+  }
+}
+
 export async function generateEvaluationAction(
   userId: string
 ): Promise<ActionResult<EvaluationResult>> {

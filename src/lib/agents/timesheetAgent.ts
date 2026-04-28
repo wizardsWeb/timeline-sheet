@@ -217,4 +217,33 @@ export const timesheetAgent = {
       return { updatedTimesheet, approval };
     });
   },
+
+  /**
+   * Delete a timesheet entry. Only allowed when status is PENDING and no approval exists.
+   */
+  async deleteTimesheet(timesheetId: string) {
+    const existing = await prisma.timesheet.findUnique({
+      where: { id: timesheetId },
+    });
+
+    if (!existing) {
+      throw new Error("Timesheet not found");
+    }
+
+    if (existing.status === "APPROVED") {
+      throw new Error("Cannot delete an approved timesheet");
+    }
+
+    const existingApproval = await prisma.approval.findFirst({
+      where: { timesheetId },
+    });
+
+    if (existingApproval) {
+      throw new Error("Cannot delete a timesheet that has already been reviewed");
+    }
+
+    return prisma.timesheet.delete({
+      where: { id: timesheetId },
+    });
+  },
 };
