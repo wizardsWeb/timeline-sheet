@@ -4,8 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/lib/store";
 import type { DashboardUser, RoleType } from "@/lib/types";
@@ -24,11 +35,18 @@ const navItems = [
   { href: "/employee", label: "Employee" },
   { href: "/manager", label: "Manager" },
   { href: "/admin", label: "Admin" },
+  { href: "/chat", label: "Team Chat" },
 ];
 
-export function AppShell({ users, heading, subheading, children }: AppShellProps) {
+export function AppShell({
+  users,
+  heading,
+  subheading,
+  children,
+}: AppShellProps) {
   const pathname = usePathname();
-  const { currentRole, currentUserId, currentUserName, setUser } = useUserStore();
+  const { currentRole, currentUserId, currentUserName, setUser } =
+    useUserStore();
 
   useEffect(() => {
     if (!users.length) {
@@ -43,13 +61,14 @@ export function AppShell({ users, heading, subheading, children }: AppShellProps
       return;
     }
 
-    const fallback = users.find((user) => user.role === currentRole) ?? users[0];
+    const fallback =
+      users.find((user) => user.role === currentRole) ?? users[0];
     setUser(fallback.id, fallback.name, fallback.role);
   }, [currentRole, currentUserId, currentUserName, setUser, users]);
 
   const currentUser = useMemo(
     () => users.find((user) => user.id === currentUserId) ?? null,
-    [currentUserId, users]
+    [currentUserId, users],
   );
 
   const handleRoleChange = (role: RoleType) => {
@@ -90,11 +109,16 @@ export function AppShell({ users, heading, subheading, children }: AppShellProps
               <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground">
                 MULTI-AGENT WORKFORCE SUITE
               </p>
-              <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {heading}
+              </h1>
               <p className="text-sm text-muted-foreground">{subheading}</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Select value={currentRole} onValueChange={(value) => handleRoleChange(value as RoleType)}>
+              <Select
+                value={currentRole}
+                onValueChange={(value) => handleRoleChange(value as RoleType)}
+              >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Switch role" />
                 </SelectTrigger>
@@ -137,7 +161,7 @@ export function AppShell({ users, heading, subheading, children }: AppShellProps
                   "rounded-md border border-transparent px-3 py-1.5 text-sm font-medium text-muted-foreground transition",
                   pathname === item.href
                     ? "border-border bg-background text-foreground shadow-xs"
-                    : "hover:border-border/70 hover:bg-background/70 hover:text-foreground"
+                    : "hover:border-border/70 hover:bg-background/70 hover:text-foreground",
                 )}
               >
                 {item.label}
@@ -146,7 +170,9 @@ export function AppShell({ users, heading, subheading, children }: AppShellProps
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {children}
+      </main>
     </div>
   );
 }
