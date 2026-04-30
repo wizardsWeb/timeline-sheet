@@ -41,6 +41,7 @@ model User {
   timesheets    Timesheet[]
   assignedTasks Task[]       @relation("AssignedTasks")
   approvals     Approval[]   @relation("ManagerApprovals")
+  messages      Message[]
 
   @@index([role])
 }
@@ -58,12 +59,12 @@ model Attendance {
 }
 
 model Task {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String
   assignedTo  String
   status      TaskStatus @default(TODO)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
 
   assignee   User        @relation("AssignedTasks", fields: [assignedTo], references: [id], onDelete: Cascade)
   timesheets Timesheet[]
@@ -72,13 +73,13 @@ model Task {
 }
 
 model Timesheet {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   userId      String
   taskId      String
   description String
   hours       Float
   status      TimesheetStatus @default(PENDING)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime        @default(now())
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   task      Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
@@ -89,16 +90,27 @@ model Timesheet {
 }
 
 model Approval {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   timesheetId String
   managerId   String
-  feedback    String   @default("")
+  feedback    String           @default("")
   decision    ApprovalDecision
-  createdAt   DateTime @default(now())
+  createdAt   DateTime         @default(now())
 
   timesheet Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
   manager   User      @relation("ManagerApprovals", fields: [managerId], references: [id], onDelete: Cascade)
 
   @@index([timesheetId])
   @@index([managerId, createdAt])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  senderId  String
+  createdAt DateTime @default(now())
+
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
 }
