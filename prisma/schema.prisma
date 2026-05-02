@@ -31,19 +31,43 @@ enum ApprovalDecision {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  role      Role     @default(EMPLOYEE)
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  createdAt    DateTime @default(now())
 
   attendances   Attendance[]
   timesheets    Timesheet[]
-  assignedTasks Task[]       @relation("AssignedTasks")
-  approvals     Approval[]   @relation("ManagerApprovals")
+  assignedTasks Task[]          @relation("AssignedTasks")
+  approvals     Approval[]      @relation("ManagerApprovals")
   messages      Message[]
+  projects      ProjectMember[]
 
   @@index([role])
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#16A34A")
+  createdAt DateTime @default(now())
+
+  members ProjectMember[]
+  tasks   Task[]
+}
+
+model ProjectMember {
+  projectId String
+  userId    String
+  role      String @default("MEMBER")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@index([userId])
 }
 
 model Attendance {
@@ -63,13 +87,17 @@ model Task {
   title       String
   description String
   assignedTo  String
+  projectId   String?
   status      TaskStatus @default(TODO)
+  priority    String     @default("MEDIUM")
   createdAt   DateTime   @default(now())
 
   assignee   User        @relation("AssignedTasks", fields: [assignedTo], references: [id], onDelete: Cascade)
+  project    Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
   timesheets Timesheet[]
 
   @@index([assignedTo, status])
+  @@index([projectId])
 }
 
 model Timesheet {
