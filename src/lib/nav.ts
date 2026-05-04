@@ -11,6 +11,7 @@ import {
   BarChart3,
   ShieldCheck,
   ServerCog,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -57,6 +58,7 @@ const adminNav: NavGroup[] = [
       { href: "/admin/users", label: "Users", icon: ShieldCheck },
       { href: "/admin/timesheets", label: "All Timesheets", icon: Clock },
       { href: "/admin/tasks", label: "All Tasks", icon: ClipboardList },
+      { href: "/admin/assistant", label: "AI Assistant", icon: Sparkles },
       { href: "/admin/system", label: "System", icon: ServerCog },
       { href: "/employee/chat", label: "Team Chat", icon: MessagesSquare },
     ],
